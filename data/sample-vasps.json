@@ -1,0 +1,49 @@
+{
+  "_metadata": {
+    "title": "Fictional VASP Reference Registry",
+    "isFictionalDemoData": true,
+    "disclaimer": "ALL ENTITIES, ADDRESSES, AND JURISDICTIONS LISTED HERE ARE PURELY FICTIONAL DEMO ENTITIES FOR HACKATHON TESTING ONLY. NO REAL-WORLD VASP, EXCHANGE, OR COMPANY IS REFERENCED OR IMPLICATED."
+  },
+  "vasps": [
+    {
+      "address": "0xVASP888888888888888888888888888888888888",
+      "vaspName": "ApexExchange (Fictional Demo VASP)",
+      "category": "Centralized Exchange (CEX)",
+      "custodialType": "Omnibus Deposit Hot Wallet",
+      "isLastTraceablePoint": true,
+      "boundaryNotice": "LAST TRACEABLE POINT: Further lawful off-chain records required.",
+      "fictionalJurisdiction": "Demo Island Regulatory Zone",
+      "complianceNotice": "Off-chain internal ledger accounts and customer KYC require appropriate legal subpoena or LEA request."
+    },
+    {
+      "address": "0xVASP777777777777777777777777777777777777",
+      "vaspName": "NovaPay Crypto (Fictional Demo VASP)",
+      "category": "Crypto Payment Processor / Gateway",
+      "custodialType": "Merchant Processing Pool",
+      "isLastTraceablePoint": true,
+      "boundaryNotice": "LAST TRACEABLE POINT: Further lawful off-chain records required.",
+      "fictionalJurisdiction": "Demo Metropolis Gateway",
+      "complianceNotice": "Funds converted to merchant settlement credits off-chain."
+    },
+    {
+      "address": "0xVASP555555555555555555555555555555555555",
+      "vaspName": "CoinHarbor (Fictional Demo VASP)",
+      "category": "Custodial Wallet Provider",
+      "custodialType": "Institutional Cold/Warm Vault",
+      "isLastTraceablePoint": true,
+      "boundaryNotice": "LAST TRACEABLE POINT: Further lawful off-chain records required.",
+      "fictionalJurisdiction": "Demo Free Trade Zone",
+      "complianceNotice": "Private institutional multi-sig custody."
+    },
+    {
+      "address": "0xVASP444444444444444444444444444444444444",
+      "vaspName": "GlobalBit Gateway (Fictional Demo VASP)",
+      "category": "OTC Brokerage & Liquidity Desk",
+      "custodialType": "Settlement Escrow",
+      "isLastTraceablePoint": true,
+      "boundaryNotice": "LAST TRACEABLE POINT: Further lawful off-chain records required.",
+      "fictionalJurisdiction": "Demo Federal District",
+      "complianceNotice": "Bilateral trade executed off-order-book."
+    }
+  ]
+}

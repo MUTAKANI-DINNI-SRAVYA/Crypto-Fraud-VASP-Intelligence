@@ -1,0 +1,72 @@
+{
+  "reportId": "IR-20260902-DEMO-001",
+  "generatedAt": "2026-09-02T21:45:00Z",
+  "caseStatus": "PRELIMINARY_TRIAGE",
+  "investigator": "Security Analyst (Prototype User)",
+  "targetAddress": "0xSCAM999999999999999999999999999999999999",
+  "walletSummary": {
+    "address": "0xSCAM999999999999999999999999999999999999",
+    "balance": 0.00,
+    "asset": "ETH",
+    "totalReceived": 5.00,
+    "totalSent": 5.00,
+    "transactionCount": 4,
+    "firstActive": "2026-09-02T10:00:00Z",
+    "lastActive": "2026-09-02T10:07:00Z"
+  },
+  "riskEvaluation": {
+    "heuristicScore": 75,
+    "riskLevel": "HIGH",
+    "triggeredRules": [
+      {
+        "ruleId": "RULE_FUND_SPLITTING",
+        "ruleName": "Rapid Fund Splitting",
+        "scoreDelta": 20,
+        "detail": "Received 5.00 ETH from 0xVIC1... and disbursed into 3 distinct wallets within 7 minutes."
+      },
+      {
+        "ruleId": "RULE_RAPID_MOVEMENT",
+        "ruleName": "High Velocity Asset Movement",
+        "scoreDelta": 20,
+        "detail": "Mean holding period before re-transfer was under 5 minutes."
+      },
+      {
+        "ruleId": "RULE_MULTI_HOP",
+        "ruleName": "Multi-Hop Layering Pattern",
+        "scoreDelta": 15,
+        "detail": "Downstream flow traces through 3 consecutive hops before reaching custodial exchanges."
+      },
+      {
+        "ruleId": "RULE_VASP_INTERACTION",
+        "ruleName": "Direct / Indirect VASP Ingestion",
+        "scoreDelta": 15,
+        "detail": "Fund branches terminate at fictional custodial exchange endpoints."
+      }
+    ]
+  },
+  "vaspFindings": [
+    {
+      "walletAddress": "0xVASP888888888888888888888888888888888888",
+      "vaspName": "ApexExchange (Fictional Demo VASP)",
+      "amountReceived": 1.95,
+      "asset": "ETH",
+      "hopDistance": 3,
+      "status": "LAST_TRACEABLE_POINT",
+      "legalNotice": "LAST TRACEABLE POINT: Further lawful off-chain records required. Funds entered custodial omnibus pool."
+    },
+    {
+      "walletAddress": "0xVASP777777777777777777777777777777777777",
+      "vaspName": "NovaPay Crypto (Fictional Demo VASP)",
+      "amountReceived": 1.48,
+      "asset": "ETH",
+      "hopDistance": 2,
+      "status": "LAST_TRACEABLE_POINT",
+      "legalNotice": "LAST TRACEABLE POINT: Further lawful off-chain records required. Funds entered payment gateway settlement pool."
+    }
+  ],
+  "aiExecutiveSummary": "PRELIMINARY ON-CHAIN BRIEFING: The analyzed wallet (0xSCAM9999...) acts as a high-velocity transit hub. Following receipt of 5.00 ETH from victim wallet 0xVIC1111..., funds were split across 3 downstream branches within 7 minutes. Branch A traversed through intermediary wallet 0xDDDD4444... before terminating at ApexExchange deposit wallet (1.95 ETH). Branch B routed directly into NovaPay Crypto (1.48 ETH). Public ledger visibility ceases at these two VASP boundaries. To identify the ultimate beneficial owner or fiat conversion details, formal legal requests must be issued to the respective VASPs for internal custodial transaction logs.",
+  "disclaimers": {
+    "heuristicDisclaimer": "This score and analysis is an automated prototype heuristic indicator intended for investigative triage. It is not an AML compliance determination or proof of illegal conduct.",
+    "onChainLimitation": "Blockchain records do not contain customer identities, bank account details, or cash withdrawal data. The designated endpoints represent the Last Traceable Points on the public ledger."
+  }
+}

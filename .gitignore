@@ -1,0 +1,35 @@
+# Operating System Files
+.DS_Store
+Thumbs.db
+
+# Environment Variables & Secrets
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# Java / Spring Boot (Backend)
+backend/springboot-project/target/
+backend/springboot-project/*.jar
+backend/springboot-project/*.war
+backend/springboot-project/.mvn/
+backend/springboot-project/mvnw
+backend/springboot-project/mvnw.cmd
+.gradle/
+build/
+
+# Node / React (Frontend)
+frontend/react-project/node_modules/
+frontend/react-project/dist/
+frontend/react-project/dist-ssr/
+frontend/react-project/*.local
+frontend/react-project/.npm/
+
+# IDE & Editor Configs
+.idea/
+*.iml
+.vscode/
+*.sublime-project
+*.sublime-workspace
+*.log
