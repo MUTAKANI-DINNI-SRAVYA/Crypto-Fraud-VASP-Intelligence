@@ -26,6 +26,9 @@ export default function App() {
   const [backendStatus, setBackendStatus] = useState('Checking backend status...');
   const [isBackendUp, setIsBackendUp] = useState(false);
 
+  // Active Menu / Feature Tab state
+  const [activeTab, setActiveTab] = useState('graph'); // default or 'overview' or 'graph'
+
   // Initial load: verify Spring Boot status and load initial demo intelligence
   useEffect(() => {
     let isMounted = true;
@@ -94,6 +97,35 @@ export default function App() {
     }
   };
 
+  const navMenuItems = [
+    { id: 'overview', label: 'All Overview', icon: '🗂️' },
+    {
+      id: 'risk',
+      label: 'Risk Summary',
+      icon: '🚨',
+      badge: investigationData?.risk?.riskScore ? `${investigationData.risk.riskScore}` : null,
+      badgeClass: investigationData?.risk?.riskScore >= 60 ? 'badge-danger' : 'badge-safe',
+    },
+    { id: 'fund', label: 'Fund Summary', icon: '💰' },
+    {
+      id: 'transactions',
+      label: 'Transactions',
+      icon: '📜',
+      badge: investigationData?.transactions?.length || null,
+    },
+    { id: 'graph', label: 'Money Flow Graph', icon: '🕸️' },
+    { id: 'timeline', label: 'Timeline', icon: '⏱️' },
+    {
+      id: 'vasp',
+      label: 'VASP Information',
+      icon: '🏛️',
+      badge: investigationData?.vaspFindings?.length ? `${investigationData.vaspFindings.length}` : null,
+      badgeClass: 'badge-purple',
+    },
+    { id: 'ai', label: 'AI Explanation', icon: '🤖' },
+    { id: 'report', label: 'Investigation Report', icon: '📑' },
+  ];
+
   return (
     <div className="app-container">
       {/* Header */}
@@ -154,76 +186,199 @@ export default function App() {
         </div>
       )}
 
-      {/* Main Investigator Intelligence Flow */}
+      {/* Main Feature Menu & Selected Feature Display */}
       {!isLoading && investigationData && (
-        <main className="investigation-flow">
+        <>
           {/* Fallback Notice Bar */}
           {investigationData.isMockFallback && (
             <div className="mock-banner">
               <span className="mock-badge">LOCAL MOCK MODE</span>
               <span>
-                Backend API is currently offline. Intelligence data rendered from local prototype contract fallback.
+                Backend API is offline. Intelligence data rendered from local prototype contract fallback.
               </span>
             </div>
           )}
 
-          {/* 2. RISK SUMMARY */}
-          <section className="flow-section">
-            <RiskSummary riskData={investigationData.risk} />
-          </section>
+          {/* Investigator Feature Navigation Menu Bar */}
+          <nav className="investigator-menu-bar" aria-label="Investigation Features Menu">
+            <div className="menu-bar-label">
+              <span>EXPLORE MODULE:</span>
+            </div>
+            <div className="menu-buttons-scroll">
+              {navMenuItems.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  className={`menu-tab-btn ${activeTab === item.id ? 'active' : ''}`}
+                  onClick={() => setActiveTab(item.id)}
+                >
+                  <span className="tab-icon">{item.icon}</span>
+                  <span className="tab-text">{item.label}</span>
+                  {item.badge !== null && item.badge !== undefined && (
+                    <span className={`tab-badge ${item.badgeClass || ''}`}>
+                      {item.badge}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+          </nav>
 
-          {/* 3. FUND SUMMARY */}
-          <section className="flow-section">
-            <FundSummary
-              summary={investigationData.summary}
-              transactions={investigationData.transactions}
-            />
-          </section>
+          {/* Feature Display Area Based on Selected Menu Item */}
+          <main className="tab-content-area">
+            {/* OVERVIEW TAB: Displays all modules */}
+            {activeTab === 'overview' && (
+              <div className="investigation-flow">
+                <section className="flow-section">
+                  <RiskSummary riskData={investigationData.risk} />
+                </section>
+                <section className="flow-section">
+                  <FundSummary
+                    summary={investigationData.summary}
+                    transactions={investigationData.transactions}
+                  />
+                </section>
+                <section className="flow-section">
+                  <TransactionTable
+                    transactions={investigationData.transactions}
+                    targetAddress={investigationData.targetAddress}
+                  />
+                </section>
+                <section className="flow-section">
+                  <MoneyFlowGraph
+                    graphData={investigationData.graphData}
+                    targetAddress={investigationData.targetAddress}
+                  />
+                </section>
+                <section className="flow-section">
+                  <InvestigationTimeline
+                    transactions={investigationData.transactions}
+                    targetAddress={investigationData.targetAddress}
+                  />
+                </section>
+                <section className="flow-section">
+                  <VaspPanel vaspFindings={investigationData.vaspFindings} />
+                </section>
+                <section className="flow-section">
+                  <AiExplanation aiData={investigationData.aiExplanation} />
+                </section>
+                <section className="flow-section">
+                  <InvestigationReport
+                    reportData={investigationData.report}
+                    targetAddress={investigationData.targetAddress}
+                    onGenerateReport={handleGenerateReport}
+                    isGenerating={isGeneratingReport}
+                  />
+                </section>
+              </div>
+            )}
 
-          {/* 4. TRANSACTIONS */}
-          <section className="flow-section">
-            <TransactionTable
-              transactions={investigationData.transactions}
-              targetAddress={investigationData.targetAddress}
-            />
-          </section>
+            {/* 2. RISK SUMMARY TAB */}
+            {activeTab === 'risk' && (
+              <section className="feature-focus-view">
+                <div className="view-title-bar">
+                  <h3>🚨 Heuristic Risk Assessment Module</h3>
+                  <span className="view-tag">Rule Engine Scoring</span>
+                </div>
+                <RiskSummary riskData={investigationData.risk} />
+              </section>
+            )}
 
-          {/* 5. MONEY FLOW GRAPH */}
-          <section className="flow-section">
-            <MoneyFlowGraph
-              graphData={investigationData.graphData}
-              targetAddress={investigationData.targetAddress}
-            />
-          </section>
+            {/* 3. FUND SUMMARY TAB */}
+            {activeTab === 'fund' && (
+              <section className="feature-focus-view">
+                <div className="view-title-bar">
+                  <h3>💰 Fund Metrics &amp; Volume Accounting</h3>
+                  <span className="view-tag">Aggregated Inflow / Outflow</span>
+                </div>
+                <FundSummary
+                  summary={investigationData.summary}
+                  transactions={investigationData.transactions}
+                />
+              </section>
+            )}
 
-          {/* 6. TIMELINE */}
-          <section className="flow-section">
-            <InvestigationTimeline
-              transactions={investigationData.transactions}
-              targetAddress={investigationData.targetAddress}
-            />
-          </section>
+            {/* 4. TRANSACTIONS TAB */}
+            {activeTab === 'transactions' && (
+              <section className="feature-focus-view">
+                <div className="view-title-bar">
+                  <h3>📜 On-Chain Ledger Audit</h3>
+                  <span className="view-tag">Verified Public Transactions</span>
+                </div>
+                <TransactionTable
+                  transactions={investigationData.transactions}
+                  targetAddress={investigationData.targetAddress}
+                />
+              </section>
+            )}
 
-          {/* 7. VASP INFORMATION */}
-          <section className="flow-section">
-            <VaspPanel vaspFindings={investigationData.vaspFindings} />
-          </section>
+            {/* 5. MONEY FLOW GRAPH TAB */}
+            {activeTab === 'graph' && (
+              <section className="feature-focus-view">
+                <div className="view-title-bar">
+                  <h3>🕸️ Cytoscape Money Flow Graph</h3>
+                  <span className="view-tag">Directed Multi-Hop Flow Visualization</span>
+                </div>
+                <MoneyFlowGraph
+                  graphData={investigationData.graphData}
+                  targetAddress={investigationData.targetAddress}
+                />
+              </section>
+            )}
 
-          {/* 8. AI EXPLANATION */}
-          <section className="flow-section">
-            <AiExplanation aiData={investigationData.aiExplanation} />
-          </section>
+            {/* 6. TIMELINE TAB */}
+            {activeTab === 'timeline' && (
+              <section className="feature-focus-view">
+                <div className="view-title-bar">
+                  <h3>⏱️ Chronological Event Progression</h3>
+                  <span className="view-tag">Sequential Layering Timestamps</span>
+                </div>
+                <InvestigationTimeline
+                  transactions={investigationData.transactions}
+                  targetAddress={investigationData.targetAddress}
+                />
+              </section>
+            )}
 
-          {/* 9. INVESTIGATION REPORT */}
-          <section className="flow-section">
-            <InvestigationReport
-              reportData={investigationData.report}
-              targetAddress={investigationData.targetAddress}
-              onGenerateReport={handleGenerateReport}
-              isGenerating={isGeneratingReport}
-            />
-          </section>
-        </main>
+            {/* 7. VASP SECTION TAB */}
+            {activeTab === 'vasp' && (
+              <section className="feature-focus-view">
+                <div className="view-title-bar">
+                  <h3>🏛️ Virtual Asset Service Provider (VASP) Attribution</h3>
+                  <span className="view-tag">Custodial Boundaries &amp; Last Traceable Points</span>
+                </div>
+                <VaspPanel vaspFindings={investigationData.vaspFindings} />
+              </section>
+            )}
+
+            {/* 8. AI EXPLANATION TAB */}
+            {activeTab === 'ai' && (
+              <section className="feature-focus-view">
+                <div className="view-title-bar">
+                  <h3>🤖 AI Investigator Synthesis</h3>
+                  <span className="view-tag">Automated Intelligence Briefing</span>
+                </div>
+                <AiExplanation aiData={investigationData.aiExplanation} />
+              </section>
+            )}
+
+            {/* 9. INVESTIGATION REPORT TAB */}
+            {activeTab === 'report' && (
+              <section className="feature-focus-view">
+                <div className="view-title-bar">
+                  <h3>📑 Formal Investigation Dossier</h3>
+                  <span className="view-tag">Compliance &amp; LEA Export</span>
+                </div>
+                <InvestigationReport
+                  reportData={investigationData.report}
+                  targetAddress={investigationData.targetAddress}
+                  onGenerateReport={handleGenerateReport}
+                  isGenerating={isGeneratingReport}
+                />
+              </section>
+            )}
+          </main>
+        </>
       )}
 
       {/* Ethical & Prototype Legal Disclaimer Footer */}
