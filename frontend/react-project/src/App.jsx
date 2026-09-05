@@ -1,9 +1,71 @@
 import React, { useState, useEffect } from 'react';
+import MoneyFlowGraph from './components/MoneyFlowGraph';
+
+// Mock transaction data illustrating Victim -> Scam -> Splitting (A, B) -> Reconsolidation (D) -> VASP
+const MOCK_TRANSACTIONS = [
+  {
+    hash: "0x1000000000000000000000000000000000000001",
+    from: "0xVIC1111111111111111111111111111111111111",
+    to: "0xSCAM999999999999999999999999999999999999",
+    amount: 5.00,
+    asset: "ETH",
+    timestamp: "2026-09-02T10:00:00Z"
+  },
+  {
+    hash: "0x2000000000000000000000000000000000000002",
+    from: "0xSCAM999999999999999999999999999999999999",
+    to: "0xAAAA111111111111111111111111111111111111",
+    amount: 2.00,
+    asset: "ETH",
+    timestamp: "2026-09-02T10:05:00Z"
+  },
+  {
+    hash: "0x2000000000000000000000000000000000000003",
+    from: "0xSCAM999999999999999999999999999999999999",
+    to: "0xAAAA111111111111111111111111111111111111",
+    amount: 0.50,
+    asset: "ETH",
+    timestamp: "2026-09-02T10:07:00Z"
+  },
+  {
+    hash: "0x3000000000000000000000000000000000000004",
+    from: "0xSCAM999999999999999999999999999999999999",
+    to: "0xBBBB222222222222222222222222222222222222",
+    amount: 1.50,
+    asset: "ETH",
+    timestamp: "2026-09-02T10:06:00Z"
+  },
+  {
+    hash: "0x4000000000000000000000000000000000000005",
+    from: "0xAAAA111111111111111111111111111111111111",
+    to: "0xDDDD444444444444444444444444444444444444",
+    amount: 1.80,
+    asset: "ETH",
+    timestamp: "2026-09-02T10:15:00Z"
+  },
+  {
+    hash: "0x5000000000000000000000000000000000000006",
+    from: "0xBBBB222222222222222222222222222222222222",
+    to: "0xDDDD444444444444444444444444444444444444",
+    amount: 1.40,
+    asset: "ETH",
+    timestamp: "2026-09-02T10:18:00Z"
+  },
+  {
+    hash: "0x6000000000000000000000000000000000000007",
+    from: "0xDDDD444444444444444444444444444444444444",
+    to: "0xVASP888888888888888888888888888888888888",
+    amount: 3.00,
+    asset: "ETH",
+    timestamp: "2026-09-02T10:22:00Z"
+  }
+];
 
 export default function App() {
   const [targetAddress, setTargetAddress] = useState('0xSCAM999999999999999999999999999999999999');
   const [backendStatus, setBackendStatus] = useState('Checking backend...');
   const [isBackendUp, setIsBackendUp] = useState(false);
+  const [transactions, setTransactions] = useState(MOCK_TRANSACTIONS);
 
   // Check Spring Boot backend health on load
   useEffect(() => {
@@ -116,63 +178,45 @@ export default function App() {
         {/* Right Column: Interactive Money Flow Canvas */}
         <div className="card">
           <h2 className="card-title">🕸️ Money Flow Graph Visualization (Cytoscape.js)</h2>
-          <div className="graph-placeholder">
-            <p style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
-              [ Interactive Graph Canvas Container ]
-            </p>
-            <p style={{ maxWidth: '480px', textAlign: 'center', fontSize: '0.85rem' }}>
-              Member 4 (Graph Engineer) will mount Cytoscape.js here, rendering Victim Wallet → Scam Wallet → Multi-Hop Nodes → Fictional VASP Endpoints.
-            </p>
-          </div>
+          <MoneyFlowGraph transactions={transactions} />
         </div>
       </div>
 
       {/* Lower Section: Transactions Ledger & AI Summary */}
-      <div className="dashboard-grid">
+      <div className="dashboard-grid lower-grid">
         {/* Transaction History Table */}
         <div className="card">
           <h2 className="card-title">📜 On-Chain Transaction Ledger</h2>
-          <table className="tx-table">
-            <thead>
-              <tr>
-                <th>Tx Hash</th>
-                <th>From</th>
-                <th>To</th>
-                <th>Amount</th>
-                <th>Timestamp</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td className="mono">0x1000...0001</td>
-                <td className="mono">0xVIC1...1111</td>
-                <td className="mono">0xSCAM...9999</td>
-                <td>5.00 ETH</td>
-                <td>10:00:00Z</td>
-              </tr>
-              <tr>
-                <td className="mono">0x2000...0002</td>
-                <td className="mono">0xSCAM...9999</td>
-                <td className="mono">0xAAAA...1111</td>
-                <td>2.00 ETH</td>
-                <td>10:05:00Z</td>
-              </tr>
-              <tr>
-                <td className="mono">0x3000...0003</td>
-                <td className="mono">0xSCAM...9999</td>
-                <td className="mono">0xBBBB...2222</td>
-                <td>1.50 ETH</td>
-                <td>10:06:00Z</td>
-              </tr>
-              <tr>
-                <td className="mono">0x6000...0006</td>
-                <td className="mono">0xDDDD...4444</td>
-                <td className="mono">0xVASP...8888</td>
-                <td>1.95 ETH</td>
-                <td>10:22:00Z</td>
-              </tr>
-            </tbody>
-          </table>
+          <div className="tx-table-wrapper">
+            <table className="tx-table">
+              <thead>
+                <tr>
+                  <th>Tx Hash</th>
+                  <th>From</th>
+                  <th>To</th>
+                  <th>Amount</th>
+                  <th>Timestamp</th>
+                </tr>
+              </thead>
+              <tbody>
+                {transactions.map((tx, i) => (
+                  <tr key={i}>
+                    <td className="mono" title={tx.hash}>
+                      {tx.hash ? `${tx.hash.substring(0, 6)}...${tx.hash.substring(tx.hash.length - 4)}` : `0x${i}`}
+                    </td>
+                    <td className="mono" title={tx.from}>
+                      {tx.from ? `${tx.from.substring(0, 6)}...${tx.from.substring(tx.from.length - 4)}` : ''}
+                    </td>
+                    <td className="mono" title={tx.to}>
+                      {tx.to ? `${tx.to.substring(0, 6)}...${tx.to.substring(tx.to.length - 4)}` : ''}
+                    </td>
+                    <td className="amount-cell">{tx.amount} {tx.asset || 'ETH'}</td>
+                    <td className="time-cell">{tx.timestamp ? new Date(tx.timestamp).toISOString().split('T')[1].slice(0, 8) + 'Z' : '-'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
 
         {/* AI Investigation Briefing */}
@@ -183,7 +227,7 @@ export default function App() {
               <strong>Summary:</strong> The analyzed wallet exhibited rapid fund dispersion within 7 minutes of receiving 5.00 ETH from the reported victim address.
             </p>
             <p style={{ marginBottom: '0.75rem' }}>
-              <strong>Handover Note:</strong> Funds branched into multiple hops, with 1.95 ETH terminating at fictional entity <em>ApexExchange</em> deposit address.
+              <strong>Handover Note:</strong> Funds branched into multiple hops, with 3.00 ETH terminating at fictional entity <em>ApexExchange</em> deposit address.
             </p>
             <p>
               <strong>Investigative Recommendation:</strong> Public ledger tracing is exhausted at the VASP boundary. Subpoena or mutual legal assistance required for off-chain customer KYC.
