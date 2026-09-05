@@ -14,6 +14,8 @@ backend/springboot-project/target/
 backend/springboot-project/*.jar
 backend/springboot-project/*.war
 backend/springboot-project/.mvn/
+backend/springboot-project/.maven/
+backend/springboot-project/mvnw
 backend/springboot-project/mvnw
 backend/springboot-project/mvnw.cmd
 .gradle/
