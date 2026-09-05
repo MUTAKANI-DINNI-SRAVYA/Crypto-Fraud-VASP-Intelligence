@@ -10,17 +10,33 @@ export default function AiExplanation({ aiData }) {
     );
   }
 
-  const {
-    suspiciousBehavior = '',
-    investigationSummary = '',
-    importantFindings = [],
-    handoverNotes = '',
-    aiSummary = '',
-    isFallback = false,
-    modelName = 'Gemini 1.5 Pro (via Backend / Contract Fallback)',
-  } = aiData;
+  const isStringData = typeof aiData === 'string';
 
-  const mainSummary = investigationSummary || aiSummary || 'No summary available.';
+  let mainSummary = '';
+  let suspiciousBehavior = '';
+  let importantFindings = [];
+  let handoverNotes = '';
+  let isFallback = false;
+  let modelName = 'Gemini 1.5 Pro (via Backend Intelligence)';
+
+  if (isStringData) {
+    mainSummary = aiData;
+    if (aiData.includes('Further lawful off-chain records may be required')) {
+      handoverNotes = 'Public ledger tracing terminates at identified boundary. Further lawful off-chain records, subpoena, or mutual legal assistance required to identify beneficial ownership.';
+    }
+  } else if (typeof aiData === 'object' && aiData !== null) {
+    mainSummary =
+      aiData.investigationSummary ||
+      aiData.aiSummary ||
+      aiData.aiExplanation ||
+      aiData.summary ||
+      'No summary available.';
+    suspiciousBehavior = aiData.suspiciousBehavior || '';
+    importantFindings = Array.isArray(aiData.importantFindings) ? aiData.importantFindings : [];
+    handoverNotes = aiData.handoverNotes || '';
+    isFallback = Boolean(aiData.isFallback);
+    modelName = aiData.modelName || 'Gemini 1.5 Pro (via Backend / Contract Fallback)';
+  }
 
   return (
     <div className="card ai-card-wrapper">

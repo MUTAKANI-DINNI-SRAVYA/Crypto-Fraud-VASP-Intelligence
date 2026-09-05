@@ -1554,6 +1554,8 @@ body {
   gap: 0.75rem;
   padding: 1rem 1.5rem;
   border-top: 1px solid var(--border-subtle);
+}
+
 /* Grid Layout Overrides */
 .dashboard-grid.lower-grid {
   grid-template-columns: 1.35fr 1fr;

@@ -1,5 +1,8 @@
 package com.cryptofraud.model;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -36,6 +39,9 @@ public class FundFlowGraph {
         private String label;
         private String type; // victim, scam, hop, vasp
         private double balance;
+
+        @JsonProperty("isLastTraceablePoint")
+        @JsonAlias({"lastTraceablePoint", "isLastTraceablePoint"})
         private boolean isLastTraceablePoint;
 
         public NodeData() {
@@ -81,10 +87,12 @@ public class FundFlowGraph {
             this.balance = balance;
         }
 
+        @JsonProperty("isLastTraceablePoint")
         public boolean isLastTraceablePoint() {
             return isLastTraceablePoint;
         }
 
+        @JsonProperty("isLastTraceablePoint")
         public void setLastTraceablePoint(boolean lastTraceablePoint) {
             isLastTraceablePoint = lastTraceablePoint;
         }
@@ -179,10 +187,12 @@ public class FundFlowGraph {
             this.timestamp = timestamp;
         }
 
+        @JsonProperty("isRapid")
         public boolean isRapid() {
             return isRapid;
         }
 
+        @JsonProperty("isRapid")
         public void setRapid(boolean rapid) {
             isRapid = rapid;
         }

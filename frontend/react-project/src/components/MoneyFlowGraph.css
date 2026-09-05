@@ -3,8 +3,8 @@
 .money-flow-graph-container {
   position: relative;
   width: 100%;
-  min-height: 480px;
-  height: 100%;
+  min-height: 520px;
+  height: 540px;
   background: rgba(11, 15, 25, 0.85);
   border: 1px solid var(--border-color, rgba(56, 189, 248, 0.2));
   border-radius: 10px;
@@ -17,7 +17,8 @@
   position: relative;
   flex: 1;
   width: 100%;
-  min-height: 420px;
+  min-height: 480px;
+  height: 100%;
 }
 
 .cy-canvas {

@@ -154,20 +154,28 @@ export default function InvestigationReport({
                     <span className="text-rose font-bold">
                       {reportData?.riskEvaluation?.heuristicScore ??
                         reportData?.riskEvaluation?.riskScore ??
-                        85}
+                        reportData?.riskScore ??
+                        0}
                       /100
                     </span>
                   </div>
                   <div>
                     <strong>Risk Classification: </strong>
                     <span className="badge-critical">
-                      {reportData?.riskEvaluation?.riskLevel || 'HIGH'}
+                      {reportData?.riskEvaluation?.riskLevel || reportData?.riskLevel || 'LOW'}
                     </span>
                   </div>
                 </div>
 
                 <div className="dossier-rules-list">
-                  {(reportData?.riskEvaluation?.triggeredRules || []).map((r, i) => (
+                  {(reportData?.riskEvaluation?.triggeredRules && reportData.riskEvaluation.triggeredRules.length > 0
+                    ? reportData.riskEvaluation.triggeredRules
+                    : (reportData?.patterns || []).map((p) => ({
+                        ruleName: p,
+                        scoreDelta: 25,
+                        description: 'Heuristic rule condition satisfied by on-chain flow analysis.',
+                      }))
+                  ).map((r, i) => (
                     <div key={i} className="dossier-rule-item">
                       <span className="rule-badge">+{r.scoreDelta || 20}</span>
                       <div>

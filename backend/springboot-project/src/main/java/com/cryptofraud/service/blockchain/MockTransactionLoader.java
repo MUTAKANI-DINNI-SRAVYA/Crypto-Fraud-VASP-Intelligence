@@ -18,7 +18,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -151,9 +153,10 @@ public class MockTransactionLoader {
 
     /**
      * Retrieves transactions related to a given wallet address.
-     * If matching transactions are found (as sender or recipient), returns those.
-     * If no exact match is found (e.g. general test wallet), falls back to returning all sample
-     * transactions so downstream demo components always have data.
+     * If matching transactions are found, performs multi-hop connected chain traversal
+     * (up to 4 hops downstream and upstream) so downstream money laundering flows,
+     * intermediary hops, and terminal VASP deposit points are included for full-pipeline intelligence.
+     * If no exact match is found, falls back to returning all sample transactions.
      */
     public List<Transaction> getTransactionsForWallet(String walletAddress) {
         List<Transaction> all = getAllTransactions();
@@ -162,19 +165,68 @@ public class MockTransactionLoader {
         }
 
         String target = walletAddress.trim();
-        List<Transaction> filtered = all.stream()
+        List<Transaction> directTxs = all.stream()
                 .filter(tx -> (tx.getFrom() != null && tx.getFrom().equalsIgnoreCase(target)) ||
                               (tx.getTo() != null && tx.getTo().equalsIgnoreCase(target)))
                 .collect(Collectors.toList());
 
-        if (!filtered.isEmpty()) {
-            log.info("Found {} matching mock transactions for address {}", filtered.size(), walletAddress);
-            return filtered;
+        if (directTxs.isEmpty()) {
+            // Fallback for prototype testing: return full sample dataset if no exact match
+            log.info("No direct transactions matched for {}; returning all {} sample transactions for prototype demo",
+                    walletAddress, all.size());
+            return all;
         }
 
-        // Fallback for prototype testing: return full sample dataset if no exact match
-        log.info("No direct transactions matched for {}; returning all {} sample transactions for prototype demo",
-                walletAddress, all.size());
-        return all;
+        // Traverse multi-hop connected transaction chain (up to 4 hops downstream & upstream)
+        // so money flows, intermediary relayers, and terminal VASP deposit points are fully included.
+        Set<String> collectedHashes = new LinkedHashSet<>();
+        Set<String> downstreamSenders = new LinkedHashSet<>();
+        Set<String> upstreamRecipients = new LinkedHashSet<>();
+
+        for (Transaction tx : directTxs) {
+            if (tx.getHash() != null) {
+                collectedHashes.add(tx.getHash());
+            }
+            if (tx.getTo() != null) downstreamSenders.add(tx.getTo().toLowerCase());
+            if (tx.getFrom() != null) upstreamRecipients.add(tx.getFrom().toLowerCase());
+        }
+
+        int maxHops = 4;
+        for (int hop = 0; hop < maxHops && !downstreamSenders.isEmpty(); hop++) {
+            Set<String> nextDownstream = new LinkedHashSet<>();
+            for (Transaction tx : all) {
+                if (tx.getFrom() != null && downstreamSenders.contains(tx.getFrom().toLowerCase())) {
+                    if (tx.getHash() != null && !collectedHashes.contains(tx.getHash())) {
+                        collectedHashes.add(tx.getHash());
+                        if (tx.getTo() != null) {
+                            nextDownstream.add(tx.getTo().toLowerCase());
+                        }
+                    }
+                }
+            }
+            downstreamSenders = nextDownstream;
+        }
+
+        for (int hop = 0; hop < maxHops && !upstreamRecipients.isEmpty(); hop++) {
+            Set<String> nextUpstream = new LinkedHashSet<>();
+            for (Transaction tx : all) {
+                if (tx.getTo() != null && upstreamRecipients.contains(tx.getTo().toLowerCase())) {
+                    if (tx.getHash() != null && !collectedHashes.contains(tx.getHash())) {
+                        collectedHashes.add(tx.getHash());
+                        if (tx.getFrom() != null) {
+                            nextUpstream.add(tx.getFrom().toLowerCase());
+                        }
+                    }
+                }
+            }
+            upstreamRecipients = nextUpstream;
+        }
+
+        List<Transaction> result = all.stream()
+                .filter(tx -> tx.getHash() != null && collectedHashes.contains(tx.getHash()))
+                .collect(Collectors.toList());
+
+        log.info("Found {} chain transactions (direct + multi-hop) for address {}", result.size(), walletAddress);
+        return result;
     }
 }

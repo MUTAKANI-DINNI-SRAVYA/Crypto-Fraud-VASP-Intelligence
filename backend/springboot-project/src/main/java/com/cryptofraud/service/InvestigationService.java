@@ -69,6 +69,25 @@ public class InvestigationService {
         report.setAiExplanation(aiExplanation);
         report.setAiExecutiveSummary(aiExplanation);
 
+        // Populate backward-compatible RiskResult object for frontend report views
+        List<RiskResult.TriggeredRule> triggeredRulesList = new ArrayList<>();
+        if (patterns != null) {
+            for (String p : patterns) {
+                triggeredRulesList.add(new RiskResult.TriggeredRule(p, p, 25, "Heuristic pattern detected during transaction trace."));
+            }
+        }
+        RiskResult riskResult = new RiskResult(wallet, riskScore, riskLevel, patterns, triggeredRulesList, Instant.now().toString());
+        report.setRiskEvaluation(riskResult);
+
+        // Populate backward-compatible WalletSummary object
+        double totalSent = fundSummary.containsKey("totalSent") ? ((Number) fundSummary.get("totalSent")).doubleValue() : 0.0;
+        double totalReceived = fundSummary.containsKey("totalReceived") ? ((Number) fundSummary.get("totalReceived")).doubleValue() : 0.0;
+        int txCount = fundSummary.containsKey("transactionCount") ? ((Number) fundSummary.get("transactionCount")).intValue() : transactions.size();
+        String firstActive = !transactions.isEmpty() && transactions.get(0).getTimestamp() != null ? transactions.get(0).getTimestamp() : Instant.now().toString();
+        String lastActive = !transactions.isEmpty() && transactions.get(transactions.size() - 1).getTimestamp() != null ? transactions.get(transactions.size() - 1).getTimestamp() : Instant.now().toString();
+        WalletSummary walletSummary = new WalletSummary(wallet, Math.max(0, totalReceived - totalSent), "ETH", totalReceived, totalSent, txCount, firstActive, lastActive);
+        report.setWalletSummary(walletSummary);
+
         // Populate backward-compatible VaspCheckResult findings list
         if (vaspInteraction.isVaspInteraction()) {
             VaspCheckResult vaspResult = new VaspCheckResult(

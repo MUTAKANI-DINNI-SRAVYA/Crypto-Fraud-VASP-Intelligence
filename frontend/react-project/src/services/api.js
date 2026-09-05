@@ -86,50 +86,69 @@ export async function fetchWalletTransactions(address) {
 /**
  * 2. POST /api/risk/analyze
  */
-export async function analyzeWalletRisk(address) {
+export async function analyzeWalletRisk(address, transactions = []) {
   return await apiRequest('/risk/analyze', {
     method: 'POST',
-    body: JSON.stringify({ address }),
+    body: JSON.stringify({
+      wallet: address,
+      address,
+      transactions: Array.isArray(transactions) ? transactions : [],
+    }),
   });
 }
 
 /**
- * 3. POST /api/funds/trace
+ * 3. GET /api/vasp/reference
  */
-export async function traceFunds(address, maxHops = 3) {
-  return await apiRequest('/funds/trace', {
-    method: 'POST',
-    body: JSON.stringify({ address, maxHops }),
-  });
+export async function fetchVaspReferences() {
+  return await apiRequest('/vasp/reference');
 }
 
 /**
  * 4. POST /api/vasp/check
  */
-export async function checkVasp(address) {
-  return await apiRequest('/vasp/check', {
+export async function checkVasp(address, transactions = []) {
+  return await apiRequest(`/vasp/check?targetWallet=${encodeURIComponent(address)}`, {
     method: 'POST',
-    body: JSON.stringify({ address }),
+    body: JSON.stringify(Array.isArray(transactions) ? transactions : []),
   });
 }
 
 /**
- * 5. POST /api/investigation/explain
+ * 5. POST /api/investigation/analyze
  */
-export async function generateAiExplanation(payload) {
-  return await apiRequest('/investigation/explain', {
+export async function generateInvestigationReport(payloadOrAddress, transactions = [], riskData = null) {
+  let bodyPayload;
+  if (typeof payloadOrAddress === 'object' && payloadOrAddress !== null) {
+    bodyPayload = payloadOrAddress;
+  } else {
+    bodyPayload = {
+      wallet: payloadOrAddress,
+      transactions: Array.isArray(transactions) ? transactions : [],
+      riskScore: riskData?.riskScore || 0,
+      riskLevel: riskData?.riskLevel || 'LOW',
+      patterns: riskData?.patterns || (riskData?.triggeredRules || []).map((r) => r.ruleName || r.ruleId || r),
+    };
+  }
+
+  return await apiRequest('/investigation/analyze', {
     method: 'POST',
-    body: JSON.stringify(payload),
+    body: JSON.stringify(bodyPayload),
   });
 }
 
 /**
- * 6. POST /api/report/generate
+ * 6. POST /api/funds/trace
  */
-export async function generateInvestigationReport(address) {
-  return await apiRequest('/report/generate', {
+export async function traceFunds(address, transactions = [], maxHops = 3) {
+  return await apiRequest('/funds/trace', {
     method: 'POST',
-    body: JSON.stringify({ address }),
+    body: JSON.stringify({
+      address,
+      wallet: address,
+      maxHops,
+      transactions: Array.isArray(transactions) ? transactions : [],
+    }),
   });
 }
 
@@ -164,46 +183,47 @@ export async function investigateWallet(address) {
     const health = await checkBackendHealth();
 
     if (health.isUp) {
-      // Backend is online, query endpoints
-      const [txs, risk] = await Promise.allSettled([
-        fetchWalletTransactions(cleanAddress),
-        analyzeWalletRisk(cleanAddress),
-      ]);
+      // 1. Fetch transactions from live backend
+      let transactions;
+      try {
+        const txsResult = await fetchWalletTransactions(cleanAddress);
+        transactions = Array.isArray(txsResult) ? txsResult : [];
+      } catch (err) {
+        console.warn('Failed to fetch transactions from backend, using fallback:', err.message);
+        transactions = getMockInvestigation(cleanAddress).transactions;
+      }
 
-      const transactions =
-        txs.status === 'fulfilled' && Array.isArray(txs.value)
-          ? txs.value
-          : getMockInvestigation(cleanAddress).transactions;
+      // 2. Perform risk analysis with the retrieved transactions
+      let riskData;
+      try {
+        riskData = await analyzeWalletRisk(cleanAddress, transactions);
+      } catch (err) {
+        console.warn('Risk analysis endpoint error, using fallback:', err.message);
+        riskData = getMockInvestigation(cleanAddress).risk;
+      }
 
-      const riskData =
-        risk.status === 'fulfilled'
-          ? risk.value
-          : getMockInvestigation(cleanAddress).risk;
+      // 3. Request full investigation dossier from backend
+      let reportData;
+      try {
+        reportData = await generateInvestigationReport({
+          wallet: cleanAddress,
+          transactions,
+          riskScore: riskData?.riskScore || 0,
+          riskLevel: riskData?.riskLevel || 'LOW',
+          patterns: riskData?.patterns || (riskData?.triggeredRules || []).map((r) => r.ruleName || r.ruleId || r),
+        });
+      } catch (err) {
+        console.warn('Investigation analyze endpoint error, using fallback:', err.message);
+        reportData = getMockInvestigation(cleanAddress).report;
+      }
 
+      // 4. Trace fund flow graph from backend
       let graphData;
       try {
-        graphData = await traceFunds(cleanAddress, 3);
-      } catch (e) {
+        graphData = await traceFunds(cleanAddress, transactions);
+      } catch (err) {
+        console.warn('Funds trace endpoint error, using fallback:', err.message);
         graphData = getMockInvestigation(cleanAddress).graphData;
-      }
-
-      let aiExplanation;
-      try {
-        aiExplanation = await generateAiExplanation({
-          address: cleanAddress,
-          riskScore: riskData.riskScore || 75,
-          triggeredRules: (riskData.triggeredRules || []).map((r) => r.ruleId || r.ruleName),
-          lastTraceablePoints: [DEMO_ADDRESSES.VASP_APEX],
-        });
-      } catch (e) {
-        aiExplanation = getMockInvestigation(cleanAddress).aiExplanation;
-      }
-
-      let report;
-      try {
-        report = await generateInvestigationReport(cleanAddress);
-      } catch (e) {
-        report = getMockInvestigation(cleanAddress).report;
       }
 
       // Compute fund summary metrics
@@ -212,6 +232,16 @@ export async function investigateWallet(address) {
 
       const totalReceived = incomingTxs.reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
       const totalSent = outgoingTxs.reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
+
+      const aiExplanation =
+        reportData?.aiExplanation ||
+        reportData?.aiExecutiveSummary ||
+        getMockInvestigation(cleanAddress).aiExplanation;
+
+      const vaspFindings =
+        reportData?.vaspFindings && reportData.vaspFindings.length > 0
+          ? reportData.vaspFindings
+          : getMockInvestigation(cleanAddress).vaspFindings;
 
       return {
         targetAddress: cleanAddress,
@@ -229,9 +259,9 @@ export async function investigateWallet(address) {
         risk: riskData,
         transactions,
         graphData: graphData || getMockInvestigation(cleanAddress).graphData,
-        vaspFindings: getMockInvestigation(cleanAddress).vaspFindings,
-        aiExplanation: aiExplanation || getMockInvestigation(cleanAddress).aiExplanation,
-        report: report || getMockInvestigation(cleanAddress).report,
+        vaspFindings,
+        aiExplanation,
+        report: reportData,
         isMockFallback: false,
         backendStatus: 'Connected to Spring Boot API',
       };

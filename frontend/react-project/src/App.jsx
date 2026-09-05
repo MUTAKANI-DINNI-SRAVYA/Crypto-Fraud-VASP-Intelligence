@@ -16,7 +16,6 @@ import InvestigationTimeline from './components/InvestigationTimeline';
 import VaspPanel from './components/VaspPanel';
 import AiExplanation from './components/AiExplanation';
 import InvestigationReport from './components/InvestigationReport';
-import MoneyFlowGraph from './components/MoneyFlowGraph';
 
 // Mock transaction data illustrating Victim -> Scam -> Splitting (A, B) -> Reconsolidation (D) -> VASP
 const MOCK_TRANSACTIONS = [
@@ -196,7 +195,7 @@ export default function App() {
           <span className="brand-logo">🛡️⛓️</span>
           <div className="brand-text-group">
             <h1 className="brand-heading">Crypto Fraud &amp; VASP Intelligence</h1>
-            <span className="badge-hackathon">Investigator Dashboard • Prototype 2026</span>
+            <span className="badge-hackathon">Investigator Dashboard</span>
           </div>
         </div>
 
@@ -308,6 +307,7 @@ export default function App() {
                 </section>
                 <section className="flow-section">
                   <MoneyFlowGraph
+                    transactions={investigationData.transactions}
                     graphData={investigationData.graphData}
                     targetAddress={investigationData.targetAddress}
                   />
@@ -373,66 +373,6 @@ export default function App() {
                 />
               </section>
             )}
-        {/* Right Column: Interactive Money Flow Canvas */}
-        <div className="card">
-          <h2 className="card-title">🕸️ Money Flow Graph Visualization (Cytoscape.js)</h2>
-          <MoneyFlowGraph transactions={transactions} />
-        </div>
-      </div>
-
-      {/* Lower Section: Transactions Ledger & AI Summary */}
-      <div className="dashboard-grid lower-grid">
-        {/* Transaction History Table */}
-        <div className="card">
-          <h2 className="card-title">📜 On-Chain Transaction Ledger</h2>
-          <div className="tx-table-wrapper">
-            <table className="tx-table">
-              <thead>
-                <tr>
-                  <th>Tx Hash</th>
-                  <th>From</th>
-                  <th>To</th>
-                  <th>Amount</th>
-                  <th>Timestamp</th>
-                </tr>
-              </thead>
-              <tbody>
-                {transactions.map((tx, i) => (
-                  <tr key={i}>
-                    <td className="mono" title={tx.hash}>
-                      {tx.hash ? `${tx.hash.substring(0, 6)}...${tx.hash.substring(tx.hash.length - 4)}` : `0x${i}`}
-                    </td>
-                    <td className="mono" title={tx.from}>
-                      {tx.from ? `${tx.from.substring(0, 6)}...${tx.from.substring(tx.from.length - 4)}` : ''}
-                    </td>
-                    <td className="mono" title={tx.to}>
-                      {tx.to ? `${tx.to.substring(0, 6)}...${tx.to.substring(tx.to.length - 4)}` : ''}
-                    </td>
-                    <td className="amount-cell">{tx.amount} {tx.asset || 'ETH'}</td>
-                    <td className="time-cell">{tx.timestamp ? new Date(tx.timestamp).toISOString().split('T')[1].slice(0, 8) + 'Z' : '-'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* AI Investigation Briefing */}
-        <div className="card">
-          <h2 className="card-title">🤖 AI-Assisted Investigation Briefing</h2>
-          <div style={{ background: 'rgba(11, 15, 25, 0.6)', padding: '1rem', borderRadius: '8px', fontSize: '0.9rem', lineHeight: '1.6', color: 'var(--text-secondary)' }}>
-            <p style={{ marginBottom: '0.75rem' }}>
-              <strong>Summary:</strong> The analyzed wallet exhibited rapid fund dispersion within 7 minutes of receiving 5.00 ETH from the reported victim address.
-            </p>
-            <p style={{ marginBottom: '0.75rem' }}>
-              <strong>Handover Note:</strong> Funds branched into multiple hops, with 3.00 ETH terminating at fictional entity <em>ApexExchange</em> deposit address.
-            </p>
-            <p>
-              <strong>Investigative Recommendation:</strong> Public ledger tracing is exhausted at the VASP boundary. Subpoena or mutual legal assistance required for off-chain customer KYC.
-            </p>
-          </div>
-        </div>
-      </div>
 
             {/* 5. MONEY FLOW GRAPH TAB */}
             {activeTab === 'graph' && (
@@ -442,6 +382,7 @@ export default function App() {
                   <span className="view-tag">Directed Multi-Hop Flow Visualization</span>
                 </div>
                 <MoneyFlowGraph
+                  transactions={investigationData.transactions}
                   graphData={investigationData.graphData}
                   targetAddress={investigationData.targetAddress}
                 />

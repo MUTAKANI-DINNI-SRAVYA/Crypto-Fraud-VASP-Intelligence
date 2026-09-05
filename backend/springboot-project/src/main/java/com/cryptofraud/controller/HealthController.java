@@ -15,7 +15,6 @@ import java.util.Map;
  * Owned by Member 1 (Team Lead / Integrator).
  */
 @RestController
-@RequestMapping("/api")
 public class HealthController {
 
     @Value("${app.mock.enabled:true}")
@@ -24,7 +23,27 @@ public class HealthController {
     @Value("${spring.application.name:Crypto Fraud & VASP Intelligence}")
     private String appName;
 
-    @GetMapping("/health")
+    @GetMapping("/")
+    public ResponseEntity<Map<String, Object>> rootWelcome() {
+        Map<String, Object> status = new java.util.LinkedHashMap<>();
+        status.put("status", "UP");
+        status.put("application", appName);
+        status.put("message", "Crypto Fraud & VASP Intelligence Backend is operational.");
+        status.put("version", "1.0.0-SNAPSHOT");
+        status.put("frontendUrl", "http://localhost:5173");
+        status.put("endpoints", Map.of(
+                "health", "/api/health",
+                "walletTransactions", "/api/wallet/{walletAddress}/transactions",
+                "riskAnalysis", "/api/risk/analyze",
+                "vaspReference", "/api/vasp/reference",
+                "vaspCheck", "/api/vasp/check",
+                "investigationReport", "/api/investigation/analyze"
+        ));
+        status.put("timestamp", Instant.now().toString());
+        return ResponseEntity.ok(status);
+    }
+
+    @GetMapping({"/api", "/api/health"})
     public ResponseEntity<Map<String, Object>> checkHealth() {
         Map<String, Object> status = new HashMap<>();
         status.put("status", "UP");
