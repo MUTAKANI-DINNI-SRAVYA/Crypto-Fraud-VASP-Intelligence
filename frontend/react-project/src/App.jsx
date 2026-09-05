@@ -16,6 +16,67 @@ import InvestigationTimeline from './components/InvestigationTimeline';
 import VaspPanel from './components/VaspPanel';
 import AiExplanation from './components/AiExplanation';
 import InvestigationReport from './components/InvestigationReport';
+import MoneyFlowGraph from './components/MoneyFlowGraph';
+
+// Mock transaction data illustrating Victim -> Scam -> Splitting (A, B) -> Reconsolidation (D) -> VASP
+const MOCK_TRANSACTIONS = [
+  {
+    hash: "0x1000000000000000000000000000000000000001",
+    from: "0xVIC1111111111111111111111111111111111111",
+    to: "0xSCAM999999999999999999999999999999999999",
+    amount: 5.00,
+    asset: "ETH",
+    timestamp: "2026-09-02T10:00:00Z"
+  },
+  {
+    hash: "0x2000000000000000000000000000000000000002",
+    from: "0xSCAM999999999999999999999999999999999999",
+    to: "0xAAAA111111111111111111111111111111111111",
+    amount: 2.00,
+    asset: "ETH",
+    timestamp: "2026-09-02T10:05:00Z"
+  },
+  {
+    hash: "0x2000000000000000000000000000000000000003",
+    from: "0xSCAM999999999999999999999999999999999999",
+    to: "0xAAAA111111111111111111111111111111111111",
+    amount: 0.50,
+    asset: "ETH",
+    timestamp: "2026-09-02T10:07:00Z"
+  },
+  {
+    hash: "0x3000000000000000000000000000000000000004",
+    from: "0xSCAM999999999999999999999999999999999999",
+    to: "0xBBBB222222222222222222222222222222222222",
+    amount: 1.50,
+    asset: "ETH",
+    timestamp: "2026-09-02T10:06:00Z"
+  },
+  {
+    hash: "0x4000000000000000000000000000000000000005",
+    from: "0xAAAA111111111111111111111111111111111111",
+    to: "0xDDDD444444444444444444444444444444444444",
+    amount: 1.80,
+    asset: "ETH",
+    timestamp: "2026-09-02T10:15:00Z"
+  },
+  {
+    hash: "0x5000000000000000000000000000000000000006",
+    from: "0xBBBB222222222222222222222222222222222222",
+    to: "0xDDDD444444444444444444444444444444444444",
+    amount: 1.40,
+    asset: "ETH",
+    timestamp: "2026-09-02T10:18:00Z"
+  },
+  {
+    hash: "0x6000000000000000000000000000000000000007",
+    from: "0xDDDD444444444444444444444444444444444444",
+    to: "0xVASP888888888888888888888888888888888888",
+    amount: 3.00,
+    asset: "ETH",
+    timestamp: "2026-09-02T10:22:00Z"
+  }
+];
 
 export default function App() {
   const [currentAddress, setCurrentAddress] = useState(DEMO_ADDRESSES.SCAM);
@@ -25,6 +86,7 @@ export default function App() {
   const [errorMessage, setErrorMessage] = useState(null);
   const [backendStatus, setBackendStatus] = useState('Checking backend status...');
   const [isBackendUp, setIsBackendUp] = useState(false);
+  const [transactions, setTransactions] = useState(MOCK_TRANSACTIONS);
 
   // Active Menu / Feature Tab state
   const [activeTab, setActiveTab] = useState('graph'); // default or 'overview' or 'graph'
@@ -311,6 +373,66 @@ export default function App() {
                 />
               </section>
             )}
+        {/* Right Column: Interactive Money Flow Canvas */}
+        <div className="card">
+          <h2 className="card-title">🕸️ Money Flow Graph Visualization (Cytoscape.js)</h2>
+          <MoneyFlowGraph transactions={transactions} />
+        </div>
+      </div>
+
+      {/* Lower Section: Transactions Ledger & AI Summary */}
+      <div className="dashboard-grid lower-grid">
+        {/* Transaction History Table */}
+        <div className="card">
+          <h2 className="card-title">📜 On-Chain Transaction Ledger</h2>
+          <div className="tx-table-wrapper">
+            <table className="tx-table">
+              <thead>
+                <tr>
+                  <th>Tx Hash</th>
+                  <th>From</th>
+                  <th>To</th>
+                  <th>Amount</th>
+                  <th>Timestamp</th>
+                </tr>
+              </thead>
+              <tbody>
+                {transactions.map((tx, i) => (
+                  <tr key={i}>
+                    <td className="mono" title={tx.hash}>
+                      {tx.hash ? `${tx.hash.substring(0, 6)}...${tx.hash.substring(tx.hash.length - 4)}` : `0x${i}`}
+                    </td>
+                    <td className="mono" title={tx.from}>
+                      {tx.from ? `${tx.from.substring(0, 6)}...${tx.from.substring(tx.from.length - 4)}` : ''}
+                    </td>
+                    <td className="mono" title={tx.to}>
+                      {tx.to ? `${tx.to.substring(0, 6)}...${tx.to.substring(tx.to.length - 4)}` : ''}
+                    </td>
+                    <td className="amount-cell">{tx.amount} {tx.asset || 'ETH'}</td>
+                    <td className="time-cell">{tx.timestamp ? new Date(tx.timestamp).toISOString().split('T')[1].slice(0, 8) + 'Z' : '-'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* AI Investigation Briefing */}
+        <div className="card">
+          <h2 className="card-title">🤖 AI-Assisted Investigation Briefing</h2>
+          <div style={{ background: 'rgba(11, 15, 25, 0.6)', padding: '1rem', borderRadius: '8px', fontSize: '0.9rem', lineHeight: '1.6', color: 'var(--text-secondary)' }}>
+            <p style={{ marginBottom: '0.75rem' }}>
+              <strong>Summary:</strong> The analyzed wallet exhibited rapid fund dispersion within 7 minutes of receiving 5.00 ETH from the reported victim address.
+            </p>
+            <p style={{ marginBottom: '0.75rem' }}>
+              <strong>Handover Note:</strong> Funds branched into multiple hops, with 3.00 ETH terminating at fictional entity <em>ApexExchange</em> deposit address.
+            </p>
+            <p>
+              <strong>Investigative Recommendation:</strong> Public ledger tracing is exhausted at the VASP boundary. Subpoena or mutual legal assistance required for off-chain customer KYC.
+            </p>
+          </div>
+        </div>
+      </div>
 
             {/* 5. MONEY FLOW GRAPH TAB */}
             {activeTab === 'graph' && (
