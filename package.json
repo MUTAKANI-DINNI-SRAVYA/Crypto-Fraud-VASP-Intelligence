@@ -2,9 +2,13 @@
   "name": "crypto-fraud-detection-workspace",
   "private": true,
   "description": "Root scripts for Crypto Fraud & VASP Intelligence",
+  "workspaces": [
+    "frontend/react-project"
+  ],
   "scripts": {
     "dev": "npm --prefix frontend/react-project run dev",
     "frontend": "npm --prefix frontend/react-project run dev",
-    "build": "npm --prefix frontend/react-project run build"
+    "build": "npm --prefix frontend/react-project run build",
+    "postinstall": "npm --prefix frontend/react-project install"
   }
 }
