@@ -1,7 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "cd frontend/react-project && npm install && npm run build",
-  "outputDirectory": "frontend/react-project/dist",
-  "installCommand": "cd frontend/react-project && npm install",
-  "framework": "vite"
+  "framework": "vite",
+  "installCommand": "sh -c \"if [ -d 'frontend/react-project' ]; then cd frontend/react-project && npm install; else npm install; fi\"",
+  "buildCommand": "sh -c \"if [ -d 'frontend/react-project' ]; then cd frontend/react-project && npm run build && mkdir -p ../../dist && cp -r dist/* ../../dist/; else npm run build; fi\"",
+  "outputDirectory": "dist"
 }
