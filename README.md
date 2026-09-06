@@ -1,11 +1,5 @@
 # Crypto Fraud & VASP Intelligence 🕵️‍♂️⛓️
 
-> **Hackathon Date:** September 7, 2026  
-> **Project Type:** College Hackathon Prototype (6-Member Collaborative Project)  
-> **Tech Stack:** Java 17 / Spring Boot (Backend) + React.js / Cytoscape.js (Frontend) + Ethereum / Etherscan API
-
----
-
 ## 📌 Executive Summary
 
 **Crypto Fraud & VASP Intelligence** is an investigator-friendly prototype designed to help security researchers and analysts track suspicious cryptocurrency fund movement across Ethereum wallets.
